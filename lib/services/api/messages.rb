@@ -20,6 +20,8 @@ module VCAP
       class ServiceOfferingRequest < JsonMessage
         required :label,        SERVICE_LABEL_REGEX
         required :url,          URI::regexp(%w(http https))
+        required :supported_versions, [String]
+        required :version_aliases, Hash
 
         optional :description,  String
         optional :info_url,     URI::regexp(%w(http https))
@@ -33,11 +35,9 @@ module VCAP
         optional :timeout,      Integer
         optional :provider,     String
         optional :default_plan, String
-        optional :supported_versions, [String]
-        optional :version_aliases, Hash
       end
 
-      class BrokeredServiceOfferingRequest < JsonMessage
+      class ProxiedServiceOfferingRequest < JsonMessage
         required :label,        SERVICE_LABEL_REGEX
         required :options,      [{"name" => String, "credentials" => Hash}]
         optional :description,  String
@@ -53,8 +53,8 @@ module VCAP
         required :handles, [Object]
       end
 
-      class ListBrokeredServicesResponse < JsonMessage
-        required :brokered_services, [{"label" => String, "description" => String, "acls" => {"users" => [String], "wildcards" => [String]}}]
+      class ListProxiedServicesResponse < JsonMessage
+        required :proxied_services, [{"label" => String, "description" => String, "acls" => {"users" => [String], "wildcards" => [String]}}]
       end
 
       #
@@ -65,10 +65,10 @@ module VCAP
         required :label, SERVICE_LABEL_REGEX
         required :name,  String
         required :plan,  String
+        required :version, String
 
         optional :plan_option
         optional :provider, String
-        optional :version, String
       end
 
       class GatewayProvisionRequest < JsonMessage
@@ -76,14 +76,15 @@ module VCAP
         required :name,  String
         required :plan,  String
         required :email, String
+        required :version, String
 
         optional :plan_option
-        optional :version, String
       end
 
-      class GatewayProvisionResponse < JsonMessage
+      # Provision and bind response use the same format
+      class GatewayHandleResponse < JsonMessage
         required :service_id, String
-        required :data
+        required :configuration
         required :credentials
       end
 
@@ -114,12 +115,6 @@ module VCAP
         required :binding_token, String
       end
 
-      class GatewayBindResponse < JsonMessage
-        required :service_id, String
-        required :configuration
-        required :credentials
-      end
-
       # Bind app_name using binding_token
       class BindExternalRequest < JsonMessage
         required :binding_token, String
@@ -135,10 +130,15 @@ module VCAP
         required :snapshot_id,  String
         required :date,  String
         required :size,  Integer
+        required :name,  String
       end
 
       class SnapshotList < JsonMessage
         required :snapshots,  [Object]
+      end
+
+      class UpdateSnapshotNameRequest < JsonMessage
+        required :name, String
       end
 
       class Job < JsonMessage

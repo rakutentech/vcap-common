@@ -22,12 +22,12 @@ module VCAP::Services::Api
       :delete => Net::HTTP::Delete,
     }
 
-    # Public: Indicate gateway client encounter an unexpcted error,
+    # Public: Indicate gateway client encounter an unexpected error,
     # such as can't connect to gateway or can't decode response.
     #
     class UnexpectedResponse < StandardError; end
 
-    # Pubilc: Indicate an error response from gateway
+    # Public: Indicate an error response from gateway
     #
     class ErrorResponse < StandardError
       attr_reader :status, :error
@@ -75,7 +75,7 @@ module VCAP::Services::Api
     def provision(args)
       msg = GatewayProvisionRequest.new(args)
       resp = perform_request(:post, '/gateway/v1/configurations', msg)
-      GatewayProvisionResponse.decode(resp)
+      GatewayHandleResponse.decode(resp)
     end
 
     def unprovision(args)
@@ -96,6 +96,11 @@ module VCAP::Services::Api
     def snapshot_details(args)
       resp = perform_request(:get, "/gateway/v1/configurations/#{args[:service_id]}/snapshots/#{args[:snapshot_id]}")
       Snapshot.decode(resp)
+    end
+
+    def update_snapshot_name(args)
+      perform_request(:post, "/gateway/v1/configurations/#{args[:service_id]}/snapshots/#{args[:snapshot_id]}/name", args[:msg])
+      EMPTY_REQUEST
     end
 
     def rollback_snapshot(args)
@@ -123,11 +128,6 @@ module VCAP::Services::Api
       Job.decode(resp)
     end
 
-    def import_from_data(args)
-      resp = perform_request(:put, "/gateway/v1/configurations/#{args[:service_id]}/serialized/data", args[:msg])
-      Job.decode(resp)
-    end
-
     def job_info(args)
       resp = perform_request(:get, "/gateway/v1/configurations/#{args[:service_id]}/jobs/#{args[:job_id]}")
       Job.decode(resp)
@@ -136,7 +136,7 @@ module VCAP::Services::Api
     def bind(args)
       msg = GatewayBindRequest.new(args)
       resp = perform_request(:post, "/gateway/v1/configurations/#{msg.service_id}/handles", msg)
-      GatewayBindResponse.decode(resp)
+      GatewayHandleResponse.decode(resp)
     end
 
     def unbind(args)
